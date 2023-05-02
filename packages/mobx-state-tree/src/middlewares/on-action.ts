@@ -220,24 +220,24 @@ export function recordActions(
  *
  * @param target
  * @param listener
- * @param options boolean (legacy attachAfter, default false) or object that controls the behavior
+ * @param options boolean (legacy attachAfter, default false) or object that controls the behavior.
  * @param options.attachAfter (default false) fires the listener *after* the action has executed instead of before.
- * @param options.onlyOuter (default true) only fires the listener for outermost actions
+ * @param options.allActions (default false) fires the listener for *all+ actions instead of just the outermost actions.
  * @returns
  */
-export interface IOnActionOptions { attachAfter?: boolean, onlyOuter?: boolean }
+export interface IOnActionOptions { attachAfter?: boolean, allActions?: boolean }
 export function onAction(
     target: IAnyStateTreeNode,
     listener: (call: ISerializedActionCall) => void,
     attachAfterOrOptions: boolean | IOnActionOptions = false
 ): IDisposer {
     // check all arguments
-    const { attachAfter = false, onlyOuter = true } = typeof attachAfterOrOptions === "object"
+    const { attachAfter = false, allActions = false } = typeof attachAfterOrOptions === "object"
         ? attachAfterOrOptions
         : { attachAfter: attachAfterOrOptions }
     assertIsStateTreeNode(target, 1)
     if (devMode()) {
-        if (onlyOuter && !isRoot(target))
+        if (!allActions && !isRoot(target))
             warnError(
                 "Warning: Attaching onAction listeners to non root nodes is dangerous: No events will be emitted for actions initiated higher up in the tree."
             )
@@ -248,7 +248,7 @@ export function onAction(
     }
 
     return addMiddleware(target, function handler(rawCall, next) {
-        if (rawCall.type === "action" && (!onlyOuter || rawCall.id === rawCall.rootId)) {
+        if (rawCall.type === "action" && (allActions || rawCall.id === rawCall.rootId)) {
             const sourceNode = getStateTreeNode(rawCall.context)
             const info = {
                 name: rawCall.name,
