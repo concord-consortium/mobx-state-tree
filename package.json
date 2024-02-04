@@ -1,6 +1,6 @@
 {
-  "name": "mobx-state-tree",
-  "version": "5.4.0",
+  "name": "@concord-consortium/mobx-state-tree",
+  "version": "5.4.0-cc.1",
   "description": "Opinionated, transactional, MobX powered state container",
   "main": "dist/mobx-state-tree.js",
   "umd:main": "dist/mobx-state-tree.umd.js",
@@ -44,7 +44,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mobxjs/mobx-state-tree.git"
+    "url": "https://github.com/concord-consortium/mobx-state-tree.git"
   },
   "author": "Michel Weststrate",
   "license": "MIT",
