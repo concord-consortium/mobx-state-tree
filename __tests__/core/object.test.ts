@@ -97,6 +97,9 @@ const createFactoryWithChildren = () => {
     .actions((self) => ({
       rename(value: string) {
         self.name = value
+      },
+      renameFileAt(index: number, name: string) {
+        self.files[index].rename(name)
       }
     }))
   return Folder
@@ -249,6 +252,28 @@ test("it should emit action calls", () => {
   onAction(doc, (action) => actions.push(action))
   doc.setTo("universe")
   expect(actions).toEqual([{ name: "setTo", path: "", args: ["universe"] }])
+})
+test("it should not emit action calls for children (by default)", () => {
+  const Folder = createFactoryWithChildren()
+  const folder = Folder.create({
+    name: "Photos",
+    files: [{ name: "Photo1" }, { name: "Photo2" }]
+  })
+  let actions: ISerializedActionCall[] = []
+  onAction(folder.files[0], (action) => actions.push(action))
+  folder.renameFileAt(0, "Photo1a")
+  expect(actions.length).toBe(0)
+})
+test("it should emit action calls for children when configured to", () => {
+  const Folder = createFactoryWithChildren()
+  const folder = Folder.create({
+    name: "Photos",
+    files: [{ name: "Photo1" }, { name: "Photo2" }]
+  })
+  let actions: ISerializedActionCall[] = []
+  onAction(folder.files[0], (action) => actions.push(action), { allActions: true })
+  folder.renameFileAt(0, "Photo1a")
+  expect(actions).toEqual([{ name: "rename", path: "", args: ["Photo1a"] }])
 })
 test("it should apply action call", () => {
   const { Factory } = createTestFactories()

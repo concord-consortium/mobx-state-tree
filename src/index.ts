@@ -44,6 +44,7 @@ export {
   castFlowReturn,
   applyAction,
   onAction,
+  type IOnActionOptions,
   type IActionRecorder,
   type ISerializedActionCall,
   recordActions,

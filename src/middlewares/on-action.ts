@@ -186,7 +186,7 @@ export function recordActions(
 
 /**
  * Registers a function that will be invoked for each action that is called on the provided model instance, or to any of its children.
- * See [actions](https://github.com/mobxjs/mobx-state-tree#actions) for more details. onAction events are emitted only for the outermost called action in the stack.
+ * See [actions](https://github.com/mobxjs/mobx-state-tree#actions) for more details. onAction events can be emitted only for the outermost called action in the stack.
  * Action can also be intercepted by middleware using addMiddleware to change the function call before it will be run.
  *
  * Not all action arguments might be serializable. For unserializable arguments, a struct like `{ $MST_UNSERIALIZABLE: true, type: "someType" }` will be generated.
@@ -219,18 +219,28 @@ export function recordActions(
  *
  * @param target
  * @param listener
- * @param attachAfter (default false) fires the listener *after* the action has executed instead of before.
+ * @param options boolean (legacy attachAfter, default false) or object that controls the behavior.
+ * @param options.attachAfter (default false) fires the listener *after* the action has executed instead of before.
+ * @param options.allActions (default false) fires the listener for *all* actions instead of just the outermost action.
  * @returns
  */
+export interface IOnActionOptions {
+  attachAfter?: boolean
+  allActions?: boolean
+}
 export function onAction(
   target: IAnyStateTreeNode,
   listener: (call: ISerializedActionCall) => void,
-  attachAfter = false
+  attachAfterOrOptions: boolean | IOnActionOptions = false
 ): IDisposer {
   // check all arguments
+  const { attachAfter = false, allActions = false } =
+    typeof attachAfterOrOptions === "object"
+      ? attachAfterOrOptions
+      : { attachAfter: attachAfterOrOptions }
   assertIsStateTreeNode(target, 1)
   if (devMode()) {
-    if (!isRoot(target))
+    if (!allActions && !isRoot(target))
       warnError(
         "Warning: Attaching onAction listeners to non root nodes is dangerous: No events will be emitted for actions initiated higher up in the tree."
       )
@@ -241,7 +251,7 @@ export function onAction(
   }
 
   return addMiddleware(target, function handler(rawCall, next) {
-    if (rawCall.type === "action" && rawCall.id === rawCall.rootId) {
+    if (rawCall.type === "action" && (allActions || rawCall.id === rawCall.rootId)) {
       const sourceNode = getStateTreeNode(rawCall.context)
       const info = {
         name: rawCall.name,
